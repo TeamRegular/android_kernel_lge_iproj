@@ -9,7 +9,7 @@ obj-$(CONFIG_MACH_LGE_I_BOARD_ATNT)	+= i_atnt/
 obj-$(CONFIG_MACH_LGE_I_BOARD_SKT)	+= i_skt/
 obj-$(CONFIG_MACH_LGE_I_BOARD_DCM)      += i_dcm/
 obj-$(CONFIG_MACH_LGE_I_BOARD_LGU)	+= i_lgu/
-obj-$(CONFIG_MACH_LGE_I_BOARD_VZW)	+= i_vzw/
+obj-$(CONFIG_MACH_LGE_IJB_BOARD_VZW)	+= ijb_vzw/
 obj-$(CONFIG_MACH_LGE_IJB_BOARD_LGU)	+= ijb_lgu/
 obj-$(CONFIG_MACH_LGE_IJB_BOARD_SKT)	+= ijb_skt/
 
