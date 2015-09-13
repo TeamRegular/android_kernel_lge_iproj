@@ -1,4 +1,4 @@
-/* arch/arm/mach-msm/lge/board-i_vzw-bt.c
+/* arch/arm/mach-msm/lge/board-ijb_skt-bt.c
  * Copyright (C) 2009 LGE, Inc.
  *
  * This software is licensed under the terms of the GNU General Public
@@ -117,7 +117,7 @@ static int configure_pcm_gpios(int on)
 			msm_gpiomux_put(pcm_gpios[i]);
 	return ret;
 } 
-static int i_vzw_bluetooth_power(int on)
+static int ijb_skt_bluetooth_power(int on)
 {
   int ret, pin;
 
@@ -183,7 +183,7 @@ static int i_vzw_bluetooth_power(int on)
 }
 
 #if 0 //implement bt power routine using existing api (configure_uart_gpios,configure_pcm_gpios)
-static int i_vzw_bluetooth_power(int on)
+static int ijb_skt_bluetooth_power(int on)
 {
 	int pin, rc;
 
@@ -227,20 +227,20 @@ static int i_vzw_bluetooth_power(int on)
 
 #if 1  //i'm not sure why phone reset when bt toggle is added to  platform  [BT_TOGGLE]
 
-static int i_vzw_bluetooth_toggle_radio(void *data, bool state)
+static int ijb_skt_bluetooth_toggle_radio(void *data, bool state)
 {
 	int ret;
 	int (*power_control)(int enable);
 
-	 printk(KERN_ERR "[LG_BTUI] %s : Called i_vzw_bluetooth_toggle_radio",__func__);  	 	
+	 printk(KERN_ERR "[LG_BTUI] %s : Called ijb_skt_bluetooth_toggle_radio",__func__);  	 	
     power_control = ((struct bluetooth_platform_data *)data)->bluetooth_power;
 	ret = (*power_control)((state == RFKILL_USER_STATE_SOFT_BLOCKED) ? 1 : 0);
 	return ret;
 }
 
-static struct bluetooth_platform_data i_vzw_bluetooth_data = {
-	.bluetooth_power = i_vzw_bluetooth_power,
-	.bluetooth_toggle_radio = i_vzw_bluetooth_toggle_radio,
+static struct bluetooth_platform_data ijb_skt_bluetooth_data = {
+	.bluetooth_power = ijb_skt_bluetooth_power,
+	.bluetooth_toggle_radio = ijb_skt_bluetooth_toggle_radio,
 };
 
 #endif
@@ -249,10 +249,10 @@ static struct platform_device msm_bt_power_device = {
 	.id	 = -1,
 #if 1 //i'm not sure why phone reset when bt toggle is added to  platform  [BT_TOGGLE]
 	.dev = {
-		.platform_data = &i_vzw_bluetooth_data,	
+		.platform_data = &ijb_skt_bluetooth_data,	
 #else
 	.dev = {
-		.platform_data = &i_vzw_bluetooth_power,
+		.platform_data = &ijb_skt_bluetooth_power,
 #endif
 	},		
 };
@@ -289,7 +289,7 @@ static struct resource bluesleep_resources[] = {
 	},
 };
 
-static struct bluesleep_platform_data i_vzw_bluesleep_data = {
+static struct bluesleep_platform_data ijb_skt_bluesleep_data = {
 	.bluetooth_port_num = 0,
 };
 
@@ -300,7 +300,7 @@ static struct platform_device msm_bluesleep_device = {
 	.num_resources	= ARRAY_SIZE(bluesleep_resources),
 	.resource	= bluesleep_resources,
 	.dev = {
-		.platform_data = &i_vzw_bluesleep_data,
+		.platform_data = &ijb_skt_bluesleep_data,
 	},	
 };
 

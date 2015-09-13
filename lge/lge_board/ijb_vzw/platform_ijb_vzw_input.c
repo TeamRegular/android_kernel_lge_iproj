@@ -34,7 +34,7 @@
 #include <asm/uaccess.h>
 #include <board_lge.h>
 
-#include "devices_i_vzw.h"
+#include "devices_ijb_skt.h"
 
 #include <apds9900.h>
 
@@ -42,7 +42,7 @@
 #include <linux/bootmem.h>
 #include <mach/board.h>
 #include <mach/msm_bus_board.h>
-#include "board_i_vzw.h"
+#include "board_ijb_skt.h"
 
 
 #ifdef CONFIG_LGE_SENSOR
@@ -289,8 +289,8 @@ struct k3dh_acc_platform_data accelerometer_pdata = {
 	.axis_map_y = 0,
 	.axis_map_z = 2,
 	.negate_x = 1,
-	.negate_y = 0,
-	.negate_z = 0,
+	.negate_y = 1,
+	.negate_z = 1,
 	.init = k3dh_init,
 	.exit = k3dh_exit,
 	.power_on = sensor_power_on,
@@ -305,12 +305,12 @@ struct k3dh_acc_platform_data accelerometer_pdata = {
 static int k3g_init(void){return 0;}
 static void k3g_exit(void){}
 struct k3g_platform_data gyroscope_pdata = {
-	.axis_map_x = 1,
-	.axis_map_y = 0,
+	.axis_map_x = 0,
+	.axis_map_y = 1,
 	.axis_map_z = 2,
 	.negate_x = 0,
 	.negate_y = 1,
-	.negate_z = 0,
+	.negate_z = 1,
 	.init = k3g_init,
 	.exit = k3g_exit,
 	.power_on = sensor_power_on,
@@ -327,9 +327,9 @@ static struct ami306_platform_data dcompss_pdata = {
 	.exit = ami306_exit,
 	.power_on = sensor_power_on,
 	.power_off = sensor_power_off,
-	.fdata_mDir = 10,
-	.fdata_sign_x = -1,
-	.fdata_sign_y = 1,
+	.fdata_mDir = 18,
+	.fdata_sign_x = 1,
+	.fdata_sign_y = -1,
 	.fdata_sign_z = -1,
 	.fdata_order0 = 0,
 	.fdata_order1 = 1,
@@ -347,16 +347,16 @@ static struct apds9900_platform_data proximity_pdata = {
 	.irq_num= GPIO_PROXIMITY_OUT_INT,
 	.power = sensor_proximity_power_set,
 	.prox_int_low_threshold = 0,
-	.prox_int_high_threshold = 500,
+	.prox_int_high_threshold = 800, //850,//600,
 	.als_threshold_hsyteresis = 30,
-	.ppcount = 6,
-	.B = 1951,
-	.C = 747,
-	.D = 1414,
-	.alsit = 92480,
-	.ga_value = 2298,
+	.ppcount = 4,
+	.B = 1960, //1939,//1951,
+	.C = 690, //687,//747,
+	.D = 1250, //1293,//1414,
+	.alsit = 146880, //92480,
+	.ga_value = 2450, //2555,//2298,
 	.df_value = 52,
-	.atime = 0xDE,
+	.atime = 0xCA, //0xDE,
 };
 #endif //                           
 #if defined (CONFIG_LGE_SENSOR_ACCELEROMETER)||defined (CONFIG_LGE_SENSOR_GYROSCOPE)

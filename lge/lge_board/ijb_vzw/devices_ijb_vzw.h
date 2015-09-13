@@ -69,19 +69,19 @@
 
 /* gpio and clock control for vibrator */
 #define GPIO_LIN_MOTOR_EN		        158
-#if 0 //                                                                     
 #define GPIO_LIN_MOTOR_PWM	        	31
-#else
-#define GPIO_LIN_MOTOR_PWM	        	29
-#endif
 
 /* MIC BIAS configuration */
 #define OTHC_MICBIAS_MAIN     OTHC_MICBIAS_0
-#define OTHC_MICBIAS_SUB      OTHC_MICBIAS_2
-#define OTHC_MICBIAS_HEADSET  OTHC_MICBIAS_1
+#define OTHC_MICBIAS_SUB      OTHC_MICBIAS_1
+#define OTHC_MICBIAS_HEADSET  OTHC_MICBIAS_2
 
 #ifdef CONFIG_LGE_TOUCHSCREEN_SYNAPTICS_RMI4_I2C
 #define MSM_GSBI1_QUP_I2C_BUS_ID  10
+#endif
+
+#if defined (CONFIG_MACH_LGE_I_BOARD_SKT)
+#define GPIO_FUEL_INT					128  /*gpio for MAX17040 FUEL_INT */
 #endif
 
 #ifdef CONFIG_SND_SOC_MSM8660_APQ
@@ -106,13 +106,17 @@ extern struct platform_device msm_pcm_hostless;
 #ifdef CONFIG_SPI_QUP
 extern struct platform_device msm_gsbi1_qup_spi_device;
 extern struct platform_device msm_gsbi10_qup_spi_device;
-#ifdef CONFIG_LGE_BROADCAST
-extern struct platform_device msm_gsbi11_qup_spi_device;	//                 
-#endif
+#ifdef CONFIG_LGE_BROADCAST_TDMB
+extern struct platform_device msm_gsbi11_qup_spi_device;	
+#endif  //                          
 #endif
 
 #ifdef CONFIG_LGE_FUEL_GAUGE
 extern struct platform_device msm_gsbi5_qup_i2c_device;
+#endif 
+
+#ifdef CONFIG_LGE_SENSOR_ACCELEROMETER  /*                                                       */
+extern struct platform_device msm_gsbi10_qup_i2c_device;
 #endif
 
 #if defined (CONFIG_LGE_WIRELESS_CHARGER_MAX8971) || defined (CONFIG_LGE_WIRELESS_CHARGER_BQ24160)
@@ -135,6 +139,10 @@ extern struct platform_device msm_device_tz_log;
 #ifdef CONFIG_HW_RANDOM_MSM
 extern struct platform_device msm_device_rng;
 #endif
+extern struct platform_device msm_device_csic0;
+extern struct platform_device msm_device_csic1;
+extern struct platform_device msm_device_vfe;
+extern struct platform_device msm_device_vpe;
 
 void __init msm8x60_init_irq(void);
 void __init msm8x60_check_2d_hardware(void);
@@ -150,6 +158,15 @@ extern struct msm_bus_scale_pdata rotator_bus_scale_pdata;
 #if defined(CONFIG_MSM_RPM_STATS_LOG)
 extern struct platform_device msm_rpm_stat_device;
 #endif
+
+#ifdef CONFIG_MSM_RPM   /*                                                       */
+extern struct platform_device msm8660_rpm_device;
+#endif
+
 #endif
 
 void __init msm_fb_register_device(char *name, void *data);
+
+//                                                                     
+unsigned int lge_get_uart_HSL0_mode(void);
+//                                                                   

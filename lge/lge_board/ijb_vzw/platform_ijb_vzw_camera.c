@@ -30,9 +30,12 @@
 #include <linux/bootmem.h>
 #include <mach/board.h>
 #include <mach/msm_bus_board.h>
-#include "board_i_vzw.h"
-#include "devices_i_vzw.h"
+#include "board_ijb_skt.h"
+#include "devices_ijb_skt.h"
 
+#ifdef CONFIG_LGE_DISPLAY_MIPI_LGIT_VIDEO_HD_PT		// js.chang: only LGIT defines
+//                                                                                                           
+#endif
 
 /* IMX105 Main Camera - 8M Bayer Camera*/
 #define GPIO_CAM_MCLK						32
@@ -43,7 +46,7 @@
 #define GPIO_8M_CAM_VCM_EN					156
 #else
 #define GPIO_8M_CAM_VCM_EN					94
-#define GPIO_VT_OSC_EN						31
+#define GPIO_VT_OSC_EN						156
 #endif
 #define CAM_I2C_SLAVE_ADDR					0x1A>>1
 
@@ -55,234 +58,35 @@
 #define GPIO_LED_FLASH_EN			    	154
 #define LED_FLASH_I2C_SLAVE_ADDR			0xA6>>1
 
-/* Seperate main/vt camera power*/
-static struct regulator *ldo1_1p2;
-static struct regulator *ldo9_2p8;
-static struct regulator *lvs0_1p8;
-static struct regulator *ldo8_2p8;
-static struct regulator *vt_ldo4_2p8;
-static struct regulator *vt_lvs3_1p8;
-static struct regulator *vt_lvs1_1p8;
 //========================================================================
 
 #ifdef CONFIG_LGE_CAMERA
 static uint32_t camera_off_gpio_table[] = {
 	GPIO_CFG(GPIO_CAM_MCLK, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 
-	GPIO_CFG(GPIO_CAM_I2C_SDA, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
-	GPIO_CFG(GPIO_CAM_I2C_SCL, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA), 
+	GPIO_CFG(GPIO_CAM_I2C_SDA, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_8MA),
+	GPIO_CFG(GPIO_CAM_I2C_SCL, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_8MA), 
 	GPIO_CFG(GPIO_8M_CAM_RESET_N, 0, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 
 	GPIO_CFG(GPIO_VT_CAM_RESET_N, 0, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 
-	GPIO_CFG(GPIO_VT_OSC_EN, 0, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA)
+	GPIO_CFG(GPIO_VT_OSC_EN, 0, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+	GPIO_CFG(GPIO_LED_FLASH_EN, 0, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA)	//                                              
 };
-static uint32_t camera_on_gpio_table[] = {
+
+static uint32_t camera_on_gpio_table_imx105[] = {
 	GPIO_CFG(GPIO_CAM_MCLK, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 
-	GPIO_CFG(GPIO_CAM_I2C_SDA, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA), 
-	GPIO_CFG(GPIO_CAM_I2C_SCL, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA), 
+	GPIO_CFG(GPIO_CAM_I2C_SDA, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_8MA), 
+	GPIO_CFG(GPIO_CAM_I2C_SCL, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_8MA), 
 	GPIO_CFG(GPIO_8M_CAM_RESET_N, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 
+	GPIO_CFG(GPIO_LED_FLASH_EN, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA)	//                                               
+};
+
+static uint32_t camera_on_gpio_table_mt9m114[] = {
+	GPIO_CFG(GPIO_CAM_MCLK, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+	GPIO_CFG(GPIO_CAM_I2C_SDA, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
+	GPIO_CFG(GPIO_CAM_I2C_SCL, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
 	GPIO_CFG(GPIO_VT_CAM_RESET_N, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), 
 	GPIO_CFG(GPIO_VT_OSC_EN, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA)
 };
 
-static void config_gpio_table(uint32_t *table, int len)
-{
-	int n, rc;
-	for (n = 0; n < len; n++) {
-		rc = gpio_tlmm_config(table[n], GPIO_CFG_ENABLE);
-		if (rc) {
-			pr_err("%s: gpio_tlmm_config(%#x)=%d\n",
-				__func__, table[n], rc);
-			break;
-		}
-	}
-}
-
-static int config_camera_on_gpios(void)
-{
-	int rc = 0;
-
-	config_gpio_table(camera_on_gpio_table,
-		ARRAY_SIZE(camera_on_gpio_table));
-
-	return rc;
-}
-
-static void config_camera_off_gpios(void)
-{
-	config_gpio_table(camera_off_gpio_table,
-		ARRAY_SIZE(camera_off_gpio_table));
-}
-
-static int config_camera_on_gpios_vt_cam(void)
-{
-	int rc = 0;
-
-	config_gpio_table(camera_on_gpio_table,
-		ARRAY_SIZE(camera_on_gpio_table));
-
-	return rc;
-}
-
-static void config_camera_off_gpios_vt_cam(void)
-{
-
-	config_gpio_table(camera_off_gpio_table,
-		ARRAY_SIZE(camera_off_gpio_table));
-}
-
-void  main_camera_power_on (void)
-{
-	/*Main Cam Power*/
-	printk("%s: \n", __func__);
-	
-	/* +2V8_8MCAM_AVDD*/
-	ldo9_2p8 = regulator_get(NULL, "8058_l9");
-	if (IS_ERR(ldo9_2p8)) {
-		pr_err("%s: VREG LDO9 get failed\n", __func__);
-		ldo9_2p8 = NULL;
-		return;
-	}
-	regulator_set_voltage(ldo9_2p8, 2800000, 2800000);
-	regulator_enable(ldo9_2p8);
-
-	/* +1V2_8MCAM_DVDD*/
-	ldo1_1p2 = regulator_get(NULL, "8058_l1");
-	if (IS_ERR(ldo1_1p2)) {
-		pr_err("%s: VREG LDO1 get failed\n", __func__);
-		ldo1_1p2 = NULL;
-		return;
-	}
-	regulator_set_voltage(ldo1_1p2, 1200000, 1200000);
-	regulator_enable(ldo1_1p2);
-
-	/* +2V8_8MCAM_AF*/
-	ldo8_2p8 = regulator_get(NULL, "8058_l8");
-	if (IS_ERR(ldo8_2p8)) {
-		pr_err("%s: VREG ldo8 get failed\n", __func__);
-		ldo8_2p8 = NULL;
-		return;
-	}
-	regulator_set_voltage(ldo8_2p8, 2800000, 2800000);
-	regulator_enable(ldo8_2p8);
-
-	/*I2C & Main Power*/
-	/* +1V8_8MCAM_VIO*/
-	lvs0_1p8 = regulator_get(NULL, "8058_lvs0");
-	if (IS_ERR(lvs0_1p8)) {
-		pr_err("%s: LVS0 get failed\n", __func__);
-		lvs0_1p8 = NULL;
-		return;
-	}
-	regulator_set_voltage(lvs0_1p8, 1800000, 1800000);
-	regulator_enable(lvs0_1p8);
-
-}
-
-
-void  main_camera_power_off (void)
-{
-	printk("%s: \n", __func__);
-
-	if (ldo1_1p2) {
-		regulator_disable(ldo1_1p2);
-		regulator_put(ldo1_1p2);
-	}
-
-	if (ldo9_2p8) {
-		regulator_disable(ldo9_2p8);
-		regulator_put(ldo9_2p8);
-	}
-
-	if (ldo8_2p8) {
-		regulator_disable(ldo8_2p8);
-		regulator_put(ldo8_2p8);
-	}
-
-	if (lvs0_1p8) {
-		regulator_disable(lvs0_1p8);
-		regulator_put(lvs0_1p8);
-	}
-}
-
-void  vt_camera_power_on (void)
-{
-
-	printk("%s: \n", __func__);
-
-	gpio_set_value(GPIO_VT_OSC_EN, 0);
-
-	/*VT Cam Power*/
-	/* +1V8_VTCAM_IOVDD*/
-	vt_lvs1_1p8 = regulator_get(NULL, "8901_lvs1");
-	if (IS_ERR(vt_lvs1_1p8)) {
-		pr_err("%s: 8901 LVS1 get failed\n", __func__);
-		vt_lvs1_1p8 = NULL;
-		return;
-	}
-	regulator_set_voltage(vt_lvs1_1p8, 1800000, 1800000);
-	regulator_enable(vt_lvs1_1p8);
-
-	/* +1V8_VTCAM_DVDD*/
-	vt_lvs3_1p8 = regulator_get(NULL, "8901_lvs3");
-	if (IS_ERR(vt_lvs3_1p8)) {
-		pr_err("%s: 8901 LVS3 get failed\n", __func__);
-		vt_lvs3_1p8 = NULL;
-		return;
-	}
-	regulator_set_voltage(vt_lvs3_1p8, 1800000, 1800000);
-	regulator_enable(vt_lvs3_1p8);
-
-	/* +2V8_VTCAM_AVDD*/
-	vt_ldo4_2p8 = regulator_get(NULL, "8901_l4");
-	if (IS_ERR(vt_ldo4_2p8)) {
-		pr_err("%s: 8901 VREG LDO4 get failed\n", __func__);
-		vt_ldo4_2p8 = NULL;
-		return;
-	}
-	regulator_set_voltage(vt_ldo4_2p8, 2800000, 2800000);
-	regulator_enable(vt_ldo4_2p8);
-
-	mdelay(1);
-
-	gpio_set_value(GPIO_VT_OSC_EN, 1);
-
-	/* +1V8_8MCAM_VIO*/
-	lvs0_1p8 = regulator_get(NULL, "8058_lvs0");
-	if (IS_ERR(lvs0_1p8)) {
-		pr_err("%s: LVS0 get failed\n", __func__);
-		lvs0_1p8 = NULL;
-		return;
-	}
-	regulator_set_voltage(lvs0_1p8, 1800000, 1800000);
-	regulator_enable(lvs0_1p8);
-
-}
-
-void  vt_camera_power_off (void)
-{
-
-	printk("%s: \n", __func__);
-
-	gpio_set_value(GPIO_VT_OSC_EN, 0);
-
-	if (vt_ldo4_2p8) {
-		regulator_disable(vt_ldo4_2p8);
-		regulator_put(vt_ldo4_2p8);
-	}
-	if (vt_lvs3_1p8) {
-		regulator_disable(vt_lvs3_1p8);
-		regulator_put(vt_lvs3_1p8);
-	}
-	if (vt_lvs1_1p8) {
-		regulator_disable(vt_lvs1_1p8);
-		regulator_put(vt_lvs1_1p8);
-	}
-	
-	if (lvs0_1p8) {
-		regulator_disable(lvs0_1p8);
-		regulator_put(lvs0_1p8);
-	}
-
-}
 #ifdef CONFIG_MSM_BUS_SCALING
 static struct msm_bus_vectors cam_init_vectors[] = {
 	{
@@ -596,26 +400,7 @@ static struct msm_bus_scale_pdata cam_bus_client_pdata = {
 #endif
 
 
-struct msm_camera_device_platform_data msm_camera_device_data_main_cam = {
-	.camera_power_on   = main_camera_power_on,
-	.camera_power_off  = main_camera_power_off,
-	.camera_gpio_on  = config_camera_on_gpios,
-	.camera_gpio_off = config_camera_off_gpios,
-	.ioext.csiphy = 0x04800000,
-	.ioext.csisz  = 0x00000400,
-	.ioext.csiirq = CSI_0_IRQ,
-	.ioclk.mclk_clk_rate = 24000000,
-	.ioclk.vfe_clk_rate  = 228570000,
-#ifdef CONFIG_MSM_BUS_SCALING
-	.cam_bus_scale_table = &cam_bus_client_pdata,
-#endif
-};
-
 struct msm_camera_device_platform_data msm_camera_device_data_vt_cam = {
-	.camera_power_on   	= vt_camera_power_on,
-	.camera_power_off  	= vt_camera_power_off,
-	.camera_gpio_on  = config_camera_on_gpios_vt_cam,
-	.camera_gpio_off = config_camera_off_gpios_vt_cam,
 	.ioext.csiphy = 0x04900000,
 	.ioext.csisz  = 0x00000400,
 	.ioext.csiirq = CSI_1_IRQ,
@@ -638,6 +423,171 @@ struct resource lge_camera_resources[] = {
 		.flags	= IORESOURCE_IRQ,
 	},
 };
+
+#ifdef CONFIG_MSM_CAMERA_V4L2
+static struct msm_camera_device_platform_data msm_camera_csi_device_data[] = {
+	{
+		.csid_core = 0,
+		.is_vpe    = 1,
+		.cam_bus_scale_table = &cam_bus_client_pdata,
+		.ioclk = {
+			.vfe_clk_rate =	228570000, //                                
+		},
+	},
+	{
+		.csid_core = 1,
+		.is_vpe    = 1,
+		.cam_bus_scale_table = &cam_bus_client_pdata,
+		.ioclk = {
+			.vfe_clk_rate =	228570000,
+		},
+	},
+};
+
+#ifdef CONFIG_LGE_SENSOR_IMX105
+static int32_t ext_power_ctrl_imx105 (int enable)
+{
+	int32_t rc = 0;
+
+	unsigned extra_gpio = GPIO_8M_CAM_RESET_N;
+	if (enable) {
+		rc = gpio_request(extra_gpio, "imx105_reset_n");
+
+		if (rc < 0) {
+			pr_err("[JJONG]%s: gpio_request failed\n", __func__);
+			return rc;
+		}
+
+		gpio_direction_output(extra_gpio, 0);
+		msleep(50);
+		gpio_set_value(extra_gpio, enable ? 1 : 0);
+		msleep(50);
+	}
+	else {
+		gpio_set_value(extra_gpio, enable ? 1 : 0);
+		gpio_free(extra_gpio);
+	}
+
+	return rc;
+}
+
+static struct msm_camera_gpio_conf gpio_conf_imx105 = {
+	.camera_off_table = camera_off_gpio_table,
+	.camera_off_table_size = ARRAY_SIZE(camera_off_gpio_table),
+	.camera_on_table = camera_on_gpio_table_imx105,
+	.camera_on_table_size = ARRAY_SIZE(camera_on_gpio_table_imx105),
+	.gpio_no_mux = 1,
+};
+
+static struct camera_vreg_t msm_cam_vreg_imx105[] = {
+	{"8058_l9", REG_LDO, 2800000, 2800000, -1},  /* +2V8_8MCAM_AVDD*/
+	{"8058_l1", REG_LDO, 1200000, 1200000, -1},  /* +1V2_8MCAM_DVDD*/
+	{"8058_l8", REG_LDO, 2800000, 2800000, -1},  /* +2V8_8MCAM_AF*/
+	{"8058_lvs0", REG_VS, 1800000, 1800000, -1},  /* +1V8_8MCAM_VIO*/
+};
+
+static struct msm_camera_sensor_platform_info sensor_board_info_imx105 = {
+	.mount_angle	= 90, //270
+	.cam_vreg = msm_cam_vreg_imx105,
+	.num_vreg = ARRAY_SIZE(msm_cam_vreg_imx105),
+	.gpio_conf = &gpio_conf_imx105,
+	.ext_power_ctrl = ext_power_ctrl_imx105,
+};
+#endif
+
+#ifdef CONFIG_LGE_SENSOR_MT9M114
+#ifdef LGIT_IEF_SWITCH
+extern int mipi_lgit_lcd_ief_off(void);
+extern int mipi_lgit_lcd_ief_on(void);
+#endif
+static int32_t ext_power_ctrl_mt9m114 (int enable)
+{
+	int32_t rc = 0;
+
+	unsigned extra_gpio;
+
+	if (enable) {
+		extra_gpio = GPIO_VT_OSC_EN;
+
+		rc = gpio_request(extra_gpio, "mt9m114_osc_en");
+
+		if (rc < 0) {
+			pr_err("%s: gpio_request failed\n", __func__);
+			return rc;
+		}
+
+		gpio_direction_output(extra_gpio, 0);
+		msleep(10);
+		gpio_set_value(extra_gpio, enable ? 1 : 0);
+		msleep(10);
+
+		extra_gpio = GPIO_VT_CAM_RESET_N;
+		rc = gpio_request(extra_gpio, "mt9m114_reset_n");
+
+		if (rc < 0) {
+			pr_err("%s: gpio_request failed\n", __func__);
+			return rc;
+		}
+
+		gpio_direction_output(extra_gpio, 0);
+		msleep(50);
+		gpio_direction_output(extra_gpio, enable ? 1 : 0);
+		gpio_set_value(extra_gpio, enable ? 1 : 0);
+		msleep(10);
+
+#ifdef LGIT_IEF_SWITCH
+		mipi_lgit_lcd_ief_off();
+#endif
+	}
+	else {
+		extra_gpio = GPIO_VT_OSC_EN;
+		gpio_set_value(extra_gpio, enable ? 1 : 0);
+		gpio_free(extra_gpio);
+
+		extra_gpio = GPIO_VT_CAM_RESET_N;
+		gpio_set_value(extra_gpio, enable ? 1 : 0);
+		gpio_free(extra_gpio);
+
+#ifdef LGIT_IEF_SWITCH
+		mipi_lgit_lcd_ief_on();
+#endif
+	}
+
+	return rc;
+}
+
+static struct msm_camera_gpio_conf gpio_conf_mt9m114 = {
+	.camera_off_table = camera_off_gpio_table,
+	.camera_off_table_size = ARRAY_SIZE(camera_off_gpio_table),
+	.camera_on_table = camera_on_gpio_table_mt9m114,
+	.camera_on_table_size = ARRAY_SIZE(camera_on_gpio_table_mt9m114),
+	.gpio_no_mux = 1,
+};
+
+static struct camera_vreg_t msm_cam_vreg_mt9m114[] = {
+//                                                                   
+#ifdef CONFIG_LGE_SENSOR_IMX105
+	{"8901_lvs1", REG_VS, 1800000, 1800000, -1}, // /* +1V8_VTCAM_IOVDD*/	
+	{"8901_lvs3", REG_VS, 1800000, 1800000, -1}, // /* +1V8_VTCAM_DVDD*/
+	{"8901_l4", REG_LDO, 2800000, 2800000, -1}, // /* +2V8_VTCAM_AVDD*/
+	{"8058_lvs0", REG_VS, 1800000, 1800000, -1}, // /* +1V8_8MCAM_VIO*/
+#else	
+	{"8901_lvs3", REG_VS, 1800000, 1800000, -1},
+	{"8901_lvs1", REG_VS, 1800000, 1800000, -1},
+	{"8901_l4", REG_LDO, 2800000, 2800000, -1},
+#endif	
+//                                                                   
+};
+
+static struct msm_camera_sensor_platform_info sensor_board_info_mt9m114 = {
+	.mount_angle	= 270,
+	.cam_vreg = msm_cam_vreg_mt9m114,
+	.num_vreg = ARRAY_SIZE(msm_cam_vreg_mt9m114),
+	.gpio_conf = &gpio_conf_mt9m114,
+	.ext_power_ctrl = ext_power_ctrl_mt9m114,
+};
+#endif
+#endif //CONFIG_MSM_CAMERA_V4L2
 
 /*                                                                        
                          
@@ -665,11 +615,33 @@ static struct i2c_board_info cam_i2c_flash_info[] = {
                                                                         */
 #ifdef CONFIG_LGE_SENSOR_IMX105
 static struct msm_camera_sensor_flash_data flash_imx105 = {
-	.flash_type		= MSM_CAMERA_FLASH_LED,
+//                                                                                        
+	.flash_type		= MSM_CAMERA_FLASH_LED, //MSM_CAMERA_FLASH_NONE,//   MSM_CAMERA_FLASH_LED
+//                                                                                         
+};
+
+//                                                                  
+static struct i2c_board_info msm_act_main_cam_i2c_info = {
+	I2C_BOARD_INFO("msm_actuator", 0x18), // #define IMX105_AF_SLAVE_ADDR	(0x0C >> 1)
+										  // real addr : 0x18 >> 1 (0x0c)
+}; 
+//                                                                 
+
+static struct msm_actuator_info msm_act_main_cam_3_info = {
+	.board_info     = &msm_act_main_cam_i2c_info,
+	.cam_name   = MSM_ACTUATOR_MAIN_CAM_3,
+	.bus_id         = MSM_GSBI4_QUP_I2C_BUS_ID,
+	.vcm_pwd 	= GPIO_8M_CAM_VCM_EN,
+	.vcm_enable     = 1,
 };
 
 static struct msm_camera_sensor_info msm_camera_sensor_imx105_data = {
 	.sensor_name	= "imx105",
+#ifdef CONFIG_MSM_CAMERA_V4L2
+	.pdata	= &msm_camera_csi_device_data[0],
+	.sensor_platform_info = &sensor_board_info_imx105,
+	.camera_type = BACK_CAMERA_2D,
+#else
 	.sensor_reset	= GPIO_8M_CAM_RESET_N,
 	.sensor_pwd		= 85,
 	.vcm_pwd		= GPIO_8M_CAM_VCM_EN,
@@ -677,16 +649,13 @@ static struct msm_camera_sensor_info msm_camera_sensor_imx105_data = {
 	.pdata			= &msm_camera_device_data_main_cam,
 	.resource		= lge_camera_resources,
 	.num_resources	= ARRAY_SIZE(lge_camera_resources),
+#endif
 	.flash_data		= &flash_imx105,
-	.csi_if			= 1
-};
-struct platform_device msm_camera_sensor_imx105 = {
-	.name	= "msm_camera_imx105",
-	.dev	= {
-		.platform_data = &msm_camera_sensor_imx105_data,
-	},
+	.csi_if			= 1,
+	.actuator_info = &msm_act_main_cam_3_info,
 };
 #endif
+
 #ifdef CONFIG_LGE_SENSOR_MT9M114
 static struct msm_camera_sensor_flash_data flash_mt9m114 = {
 	.flash_type		= MSM_CAMERA_FLASH_NONE,
@@ -694,6 +663,12 @@ static struct msm_camera_sensor_flash_data flash_mt9m114 = {
 
 static struct msm_camera_sensor_info msm_camera_sensor_mt9m114_data = {
 	.sensor_name	= "mt9m114",
+#ifdef CONFIG_MSM_CAMERA_V4L2
+	.pdata	= &msm_camera_csi_device_data[1],
+	.sensor_platform_info = &sensor_board_info_mt9m114,
+	.camera_type = FRONT_CAMERA_2D,
+	.sensor_type = YUV_SENSOR,
+#else
 	.sensor_reset	= GPIO_VT_CAM_RESET_N,
 	.sensor_pwd		= 85,
 	.vcm_pwd		= 1,
@@ -701,40 +676,40 @@ static struct msm_camera_sensor_info msm_camera_sensor_mt9m114_data = {
 	.pdata			= &msm_camera_device_data_vt_cam,
 	.resource		= lge_camera_resources,
 	.num_resources	= ARRAY_SIZE(lge_camera_resources),
+#endif
 	.flash_data		= &flash_mt9m114,
-	.csi_if			= 1
+	.csi_if			= 1,
 };
+#endif
 
-struct platform_device msm_camera_sensor_mt9m114 = {
-	.id 	= 0,
-	.name	= "msm_camera_mt9m114",
-	.dev	= {
+#ifdef CONFIG_MSM_CAMERA_V4L2
+static struct i2c_board_info lge_camera_boardinfo[] __initdata = {
+#ifdef CONFIG_LGE_SENSOR_IMX105
+	{
+		I2C_BOARD_INFO("imx105", CAM_I2C_SLAVE_ADDR), //	.sensor_i2c_addr = 0x34, => i2c OK //0x34, Real salve address : 0x34>> 1 ( 0x1A юс.) 
+		.platform_data = &msm_camera_sensor_imx105_data,
+	},
+#endif
+	#ifdef CONFIG_LGE_SENSOR_MT9M114  //                          
+	{
+		I2C_BOARD_INFO("mt9m114", VT_CAM_I2C_SLAVE_ADDR ), // VT_CAM_I2C_SLAVE_ADDR   ==> i2c OK //	.sensor_i2c_addr = 0x90, ==> i2c Failed  // real addr : 0x90 >> 1( 0x48 юс.)
 		.platform_data = &msm_camera_sensor_mt9m114_data,
 	},
+	#endif
 };
 #endif
-
-static struct i2c_board_info lge_camera_boardinfo[] __initdata = {
-	#ifdef CONFIG_LGE_SENSOR_IMX105
-	{
-		I2C_BOARD_INFO("imx105", CAM_I2C_SLAVE_ADDR),
-	},
-	#endif
-	#ifdef CONFIG_LGE_SENSOR_MT9M114
-	{
-		I2C_BOARD_INFO("mt9m114", VT_CAM_I2C_SLAVE_ADDR),
-	},
-	#endif
-};
 #endif /*                 */
+static struct platform_device msm_camera_server = {
+	.name = "msm_cam_server",
+	.id = 0,
+};
 
-static struct platform_device *camera_devices[] __initdata = {
-#ifdef CONFIG_LGE_SENSOR_IMX105
-		&msm_camera_sensor_imx105,
-#endif
-#ifdef CONFIG_LGE_SENSOR_MT9M114
-		&msm_camera_sensor_mt9m114,
-#endif
+struct platform_device *camera_devices[] __initdata = {
+		&msm_camera_server,
+		&msm_device_csic0,
+		&msm_device_csic1,
+		&msm_device_vfe,
+		&msm_device_vpe,
 };
 
 #ifdef CONFIG_I2C
@@ -771,20 +746,24 @@ static struct i2c_registry camera_i2c_devices[] __initdata = {
 };
 
 void __init i2c_register_camera_info(void){
-
 	int i;
 
+	printk(KERN_EMERG "[JJONG/+]i2c_register_camera_info\n");
 	/* Run the array and install devices as appropriate */
 	for (i = 0; i < ARRAY_SIZE(camera_i2c_devices); ++i) {
 		i2c_register_board_info(camera_i2c_devices[i].bus,
 						camera_i2c_devices[i].info,
 						camera_i2c_devices[i].len);
 	}
+	printk(KERN_EMERG "[JJONG/-]i2c_register_camera_info\n");
 }
 #endif /*CONFIG_I2C*/
 
 void __init lge_camera_init(void){
+
+	printk(KERN_EMERG "[JJONG/+]msm_camera_init\n");
 	platform_add_devices(camera_devices, ARRAY_SIZE(camera_devices));
+	printk(KERN_EMERG "[JJONG/-]msm_camera_init\n");
 }
 
 

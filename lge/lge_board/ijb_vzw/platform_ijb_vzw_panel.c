@@ -37,8 +37,8 @@
 #include <linux/ion.h>
 #include <mach/ion.h>
 
-#include "devices_i_vzw.h"
-#include "board_i_vzw.h"
+#include "devices_ijb_skt.h"
+#include "board_ijb_skt.h"
 
 #ifdef CONFIG_FB_MSM_LCDC_DSUB
 /* VGA = 1440 x 900 x 4(bpp) x 2(pages)
@@ -62,16 +62,18 @@
 #endif
 
 #ifdef CONFIG_FB_MSM_HDMI_MSM_PANEL
-#define MSM_FB_EXT_BUF_SIZE  (1920 * 1080 * 2 * 1) /* 2 bpp x 1 page */
+#define MSM_FB_EXT_BUF_SIZE  \
+		(roundup((1920 * 1080 * 4), 4096) * 2) /* 4 bpp x 2 page */
 #elif defined(CONFIG_FB_MSM_TVOUT)
 #define MSM_FB_EXT_BUF_SIZE  (720 * 576 * 2 * 2) /* 2 bpp x 2 pages */
 #else
 #define MSM_FB_EXT_BUFT_SIZE	0
 #endif
 
+#define MSM_FB_EXT_BUF_CAPTION_SIZE (0)
 /* Note: must be multiple of 4096 */
-#define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE + MSM_FB_EXT_BUF_SIZE+0xFD2000 + \
-				MSM_FB_DSUB_PMEM_ADDER, 4096)
+#define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE + MSM_FB_EXT_BUF_SIZE + \
+				MSM_FB_EXT_BUF_CAPTION_SIZE + MSM_FB_DSUB_PMEM_ADDER, 4096)
 
 #define MSM_PMEM_SF_SIZE 0x4000000 /* 64 Mbytes */
 #define MSM_HDMI_PRIM_PMEM_SF_SIZE 0x4000000 /* 64 Mbytes */
@@ -165,6 +167,7 @@ static struct resource hdmi_msm_resources[] = {
 
 static int hdmi_enable_5v(int on);
 static int hdmi_core_power(int on, int show);
+static int hdmi_gpio_config(int on);
 static int hdmi_cec_power(int on);
 
 static struct msm_hdmi_platform_data hdmi_msm_data = {
@@ -172,6 +175,7 @@ static struct msm_hdmi_platform_data hdmi_msm_data = {
 	.enable_5v = hdmi_enable_5v,
 	.core_power = hdmi_core_power,
 	.cec_power = hdmi_cec_power,
+	.gpio_config = hdmi_gpio_config,
 };
 
 static struct platform_device hdmi_msm_device = {
@@ -199,7 +203,7 @@ static void mipi_config_gpio(int on)
 	}
 }
 
-#ifdef CONFIG_LGE_DISPLAY_MIPI_LGIT_VIDEO_HD_PT
+#ifdef CONFIG_LGE_DISPLAY_MIPI_LGIT_IJB_VIDEO_HD_PT
 extern void lm3530_lcd_backlight_set_level( int level);
 static int mipi_lgit_backlight_level(int level, int max, int min)
 {
@@ -247,18 +251,21 @@ static int mipi_dsi_panel_power(int on)
 		reg_8901_l2 = regulator_get(NULL, "8901_l2");
 		if (IS_ERR(reg_8901_l2)) {
 			reg_8901_l2 = NULL;
+			goto power_error;
 		}
 	}	
 	if (reg_8901_mvs == NULL) {
 		reg_8901_mvs = regulator_get(NULL, "8901_mvs0");
 		if (IS_ERR(reg_8901_mvs)) {
 			reg_8901_mvs = NULL;
+			goto power_error;
 		}
 	}
 	if (reg_8901_l3 == NULL) {
 		reg_8901_l3 = regulator_get(NULL, "8901_l3");
 		if (IS_ERR(reg_8901_l3)) {
 			reg_8901_l3 = NULL;
+			goto power_error;
 		}
 	}
 
@@ -315,6 +322,8 @@ static int mipi_dsi_panel_power(int on)
 
 	}
 	return 0;
+power_error:
+	return -1;
 }
 #endif
 struct mipi_dsi_platform_data mipi_dsi_pdata = {
@@ -372,7 +381,7 @@ static struct platform_device *panel_devices[] __initdata = {
 #ifdef CONFIG_FB_MSM_MIPI_DSI
 
 /*                                  */
-#ifdef CONFIG_LGE_DISPLAY_MIPI_LGIT_VIDEO_HD_PT
+#ifdef CONFIG_LGE_DISPLAY_MIPI_LGIT_IJB_VIDEO_HD_PT
 	&mipi_dsi_lgit_panel_device,
 #else
 	&mipi_dsi_sharp_panel_device,
@@ -412,7 +421,7 @@ static struct backlight_platform_data lm3530_data = {
 	0xBB = 26 mA full-scale current
 	0xBF= 29.5 mA full-scale current
 	*/
-	.min_brightness = 0x00,// 0x05, //0x09,
+	.min_brightness = 0x05, //0x00,0x09
 	.max_brightness = 0x71,
 };
 	
@@ -583,6 +592,51 @@ error1:
 	return rc;
 }
 
+static int hdmi_gpio_config(int on)
+{
+	int rc = 0;
+	static int prev_on;
+
+	if (on == prev_on)
+		return 0;
+
+	if (on) {
+		rc = gpio_request(170, "HDMI_DDC_CLK");
+		if (rc) {
+			pr_err("'%s'(%d) gpio_request failed, rc=%d\n",
+					"HDMI_DDC_CLK", 170, rc);
+			goto error1;
+		}
+		rc = gpio_request(171, "HDMI_DDC_DATA");
+		if (rc) {
+			pr_err("'%s'(%d) gpio_request failed, rc=%d\n",
+					"HDMI_DDC_DATA", 171, rc);
+			goto error2;
+		}
+		rc = gpio_request(172, "HDMI_HPD");
+		if (rc) {
+			pr_err("'%s'(%d) gpio_request failed, rc=%d\n",
+					"HDMI_HPD", 172, rc);
+			goto error3;
+		}
+		pr_debug("%s(on): success\n", __func__);
+	} else {
+		gpio_free(170);
+		gpio_free(171);
+		gpio_free(172);
+		pr_debug("%s(off): success\n", __func__);
+	}
+
+	prev_on = on;
+	return 0;
+
+error3:
+	gpio_free(171);
+error2:
+	gpio_free(170);
+error1:
+	return rc;
+}
 static int hdmi_cec_power(int on)
 {	
 #ifndef CONFIG_MACH_LGE_I_BOARD
@@ -783,16 +837,20 @@ static struct msm_bus_vectors mdp_sd_ebi_vectors[] = {
 	{
 		.src = MSM_BUS_MASTER_MDP_PORT0,
 		.dst = MSM_BUS_SLAVE_SMI,
-		//.ab and .ib change for blue screen in suspend/resume during camera preview
-		.ab = 334080000, //0,
-		.ib = 417600000* 2, //0,
+		.ab = 0,
+		.ib = 0,
 	},
 	/* Master and slaves can be from different fabrics */
 	{
 		.src = MSM_BUS_MASTER_MDP_PORT0,
 		.dst = MSM_BUS_SLAVE_EBI_CH0,
-        .ab = 334080000,
-        .ib = 417600000 * 2,
+#if 1 /* avoid underrun at boot time */
+		.ab = 334080000,
+		.ib = 417600000 * 2,
+#else /*Temporary code - for boot error */
+		.ab = 0,
+		.ib = 270000000 * 2,
+#endif
 	},
 };
 static struct msm_bus_vectors mdp_vga_vectors[] = {
@@ -806,8 +864,8 @@ static struct msm_bus_vectors mdp_vga_vectors[] = {
 	{
 		.src = MSM_BUS_MASTER_MDP_PORT0,
 		.dst = MSM_BUS_SLAVE_EBI_CH0,
-        .ab = 334080000,
-        .ib = 417600000 * 2,
+		.ab = 334080000,
+		.ib = 417600000 * 2,
 	},
 };
 
@@ -816,15 +874,15 @@ static struct msm_bus_vectors mdp_720p_vectors[] = {
 	{
 		.src = MSM_BUS_MASTER_MDP_PORT0,
 		.dst = MSM_BUS_SLAVE_SMI,
-        .ab = 334080000,
-        .ib = 417600000 * 2,
+		.ab = 407937024,
+		.ib = 509921280,
 	},
 	/* Master and slaves can be from different fabrics */
 	{
 		.src = MSM_BUS_MASTER_MDP_PORT0,
 		.dst = MSM_BUS_SLAVE_EBI_CH0,
-        .ab = 334080000,
-        .ib = 417600000 * 2,
+		.ab = 407937024,
+		.ib = 509921280*2,
 	},
 };
 
@@ -833,15 +891,15 @@ static struct msm_bus_vectors mdp_1080p_vectors[] = {
 	{
 		.src = MSM_BUS_MASTER_MDP_PORT0,
 		.dst = MSM_BUS_SLAVE_SMI,
-		.ab = 334080000,
-		.ib = 417600000,
+		.ab = 544794624,
+		.ib = 680993280,
 	},
 	/* Master and slaves can be from different fabrics */
 	{
 		.src = MSM_BUS_MASTER_MDP_PORT0,
 		.dst = MSM_BUS_SLAVE_EBI_CH0,
-		.ab = 432384000,
-		.ib = 550000000 * 2,
+		.ab = 544794624,
+		.ib = 680993280*2,
 	},
 };
 
@@ -979,37 +1037,21 @@ static struct lcdc_platform_data dtv_hdmi_prim_pdata = {
 #endif
 
 
-#ifdef CONFIG_FB_MSM_MIPI_DSI
-int mdp_core_clk_rate_table[] = {
-	200000000,
-	200000000,
-	200000000,
-	200000000,
-};
-#else
-int mdp_core_clk_rate_table[] = {
-	59080000,
-	85330000,
-	128000000,
-	200000000,
-};
-#endif
-
 static struct msm_panel_common_pdata mdp_pdata = {
-	.gpio = MDP_VSYNC_GPIO,
-	.mdp_core_clk_rate = 160000000,//59080000,
-	.mdp_core_clk_table = mdp_core_clk_rate_table,
-	.num_mdp_clk = ARRAY_SIZE(mdp_core_clk_rate_table),
+	//.gpio = MDP_VSYNC_GPIO,
+	.mdp_max_clk = 200000000,
 #ifdef CONFIG_MSM_BUS_SCALING
 	.mdp_bus_scale_table = &mdp_bus_scale_pdata,
 #endif
 	.mdp_rev = MDP_REV_41,
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
-	.mem_hid = ION_CP_WB_HEAP_ID,
+	.mem_hid = BIT(ION_CP_WB_HEAP_ID),
 #else
 	.mem_hid = MEMTYPE_EBI1,
 #endif
+	.mdp_iommu_split_domain = 0,
 };
+
 
 void __init msm8x60_mdp_writeback(struct memtype_reserve* reserve_table)
 {

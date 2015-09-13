@@ -13,8 +13,56 @@
 #include <mach/irqs.h>
 #include <asm/mach-types.h>
 #include <mach/gpiomux.h>
-#include "gpiomux_i_vzw.h"
-#include "devices_i_vzw.h"
+#include "gpiomux_ijb_skt.h"
+#include "devices_ijb_skt.h"
+
+#ifdef CONFIG_LGE_PM_CURRENT_CONSUMPTION_FIX
+static struct gpiomux_setting msm_gpio81_cfg_suspend2 = /* BOOT_CONFIG_0 */
+{
+	.func = GPIOMUX_FUNC_GPIO,
+	.drv = GPIOMUX_DRV_2MA,
+	.pull = GPIOMUX_PULL_UP,
+};
+
+static struct gpiomux_setting msm_gpio84_cfg_suspend2 = /* BOOT_CONFIG_1 */
+{
+	.func = GPIOMUX_FUNC_GPIO,
+	.drv = GPIOMUX_DRV_2MA,
+	.pull = GPIOMUX_PULL_UP,
+};
+static struct gpiomux_setting msm_gpio76_cfg_suspend2 = /* BOOT_CONFIG_6*/
+{
+	.func = GPIOMUX_FUNC_GPIO,
+	.drv = GPIOMUX_DRV_2MA,
+	.pull = GPIOMUX_PULL_UP,
+};
+
+static struct msm_gpiomux_config msm8x60_current_configs[] __initdata = {
+	/* BOOT_CONFIG_0 */
+	{
+		.gpio      = 81,
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &msm_gpio81_cfg_suspend2,
+		},
+	},
+	/* BOOT_CONFIG_1 */
+	{
+		.gpio      = 84,
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &msm_gpio84_cfg_suspend2,
+		},
+	},
+	/* BOOT_CONFIG_6*/
+	{
+		.gpio      = 76,
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &msm_gpio76_cfg_suspend2,
+		},
+	},
+};
+//for atnt rock_bottom end
+#endif
+
 static struct gpiomux_setting console_uart = {
 	.func = GPIOMUX_FUNC_2,
 	.drv = GPIOMUX_DRV_8MA,
@@ -87,8 +135,8 @@ static struct gpiomux_setting gsbi10 = {
 	.drv = GPIOMUX_DRV_8MA,
 	.pull = GPIOMUX_PULL_NONE,
 };
-//                   
-#ifdef CONFIG_LGE_BROADCAST	
+
+#ifdef CONFIG_LGE_BROADCAST_TDMB
 static struct gpiomux_setting gsbi11 = {
 	.func = GPIOMUX_FUNC_2,
 	.drv = GPIOMUX_DRV_8MA,
@@ -107,8 +155,7 @@ static struct gpiomux_setting DMB_INT = {
 	.drv = GPIOMUX_DRV_8MA,
 	.pull = GPIOMUX_PULL_NONE,
 };
-#endif	//                     
-//                 
+#endif	//                          
 
 #if defined (CONFIG_LGE_WIRELESS_CHARGER_MAX8971) || defined (CONFIG_LGE_WIRELESS_CHARGER_BQ24160)
 static struct gpiomux_setting gsbi11 = {
@@ -390,6 +437,15 @@ static struct gpiomux_setting earpole_detect_cfg = {
 
 #endif
 
+#if defined (CONFIG_MACH_LGE_I_BOARD_SKT)
+static struct gpiomux_setting fuel_int_cfg = {
+	.func = GPIOMUX_FUNC_GPIO,
+	.drv = GPIOMUX_DRV_2MA,
+	.pull = GPIOMUX_PULL_UP,
+	.dir = GPIOMUX_IN,
+};
+#endif
+
 static struct gpiomux_setting mdm2ap_vddmin_active_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
 	.drv = GPIOMUX_DRV_2MA,
@@ -403,7 +459,6 @@ static struct gpiomux_setting mdm2ap_vddmin_suspend_cfg = {
 };
 //                                          
 #if defined(CONFIG_LGE_NFC_PN544_C2)
-#if 0 //not used
 static struct gpiomux_setting nfc_pn544pn65n_ven_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
 	.drv = GPIOMUX_DRV_8MA,
@@ -417,7 +472,6 @@ static struct gpiomux_setting nfc_pn544pn65n_irq_cfg = {
 	.pull = GPIOMUX_PULL_DOWN,
 	.dir = GPIOMUX_IN,
 };
-#endif
 static struct gpiomux_setting nfc_pn544pn65n_firm_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
 	.drv = GPIOMUX_DRV_8MA,
@@ -425,6 +479,8 @@ static struct gpiomux_setting nfc_pn544pn65n_firm_cfg = {
 	.dir = GPIOMUX_OUT_LOW,
 };
 #endif
+//                                        
+
 #ifdef CONFIG_LGE_MHL_SII9244
 static struct gpiomux_setting mhl_detect_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
@@ -450,7 +506,7 @@ static struct msm_gpiomux_config msm8x60_mhl_configs[] __initdata = {
 	},
 	/* USB_MHL_SEL */
 	{
-		.gpio      = 33,
+		.gpio      = 139,
 		.settings = {
 			[GPIOMUX_SUSPENDED] = &mhl_reset_n_cfg,
 		},
@@ -472,7 +528,6 @@ static struct msm_gpiomux_config msm8x60_mhl_configs[] __initdata = {
 };
 #endif
 static struct msm_gpiomux_config msm8x60_gsbi_configs[] __initdata = {
-#ifndef CONFIG_LGE_MHL_SII9244	
 	{
 		.gpio      = 33,
 		.settings = {
@@ -480,11 +535,10 @@ static struct msm_gpiomux_config msm8x60_gsbi_configs[] __initdata = {
 			[GPIOMUX_ACTIVE]    = &spi_active,
 		},
 	},
-#endif
 	{
 		.gpio      = 34,
 		.settings = {
-			//                        
+			//                                  
 			//[GPIOMUX_SUSPENDED] = &spi_suspended_config,
 			//[GPIOMUX_ACTIVE]    = &spi_active,
 			[GPIOMUX_ACTIVE]    = &wifi_active,
@@ -519,7 +573,7 @@ static struct msm_gpiomux_config msm8x60_gsbi_configs[] __initdata = {
 			[GPIOMUX_SUSPENDED] = &i2c_suspended_config,
 			[GPIOMUX_ACTIVE]    = &i2c_active,
 		},
-	},
+	},			
 //                                          
 #if defined(CONFIG_LGE_NFC_PN544_C2)
 	{
@@ -598,9 +652,8 @@ static struct msm_gpiomux_config msm8x60_gsbi_configs[] __initdata = {
 			[GPIOMUX_SUSPENDED] = &gsbi10,
 		},
 	},	
-#endif	
-//                       
-#ifdef CONFIG_LGE_BROADCAST
+#endif
+#ifdef CONFIG_LGE_BROADCAST_TDMB
 
 	/* DMB_RESET */
 	{
@@ -657,8 +710,7 @@ static struct msm_gpiomux_config msm8x60_gsbi_configs[] __initdata = {
 			[GPIOMUX_SUSPENDED] = &DMB_INT,
 		},
 	},
-#endif	//                    
-//                     
+#endif	//                          
 
 #if defined (CONFIG_LGE_WIRELESS_CHARGER_MAX8971) || defined (CONFIG_LGE_WIRELESS_CHARGER_BQ24160)
 	{
@@ -687,6 +739,31 @@ static struct msm_gpiomux_config msm8x60_gsbi_configs[] __initdata = {
 		},
 	},	
 };
+
+//                                                                
+static struct msm_gpiomux_config msm8x60_ebi2_configs[] __initdata = {
+	{
+		.gpio      = 123,
+		.settings = {
+#if defined(CONFIG_LGE_NFC_PN544_C2)
+			[GPIOMUX_SUSPENDED] = &nfc_pn544pn65n_irq_cfg,
+#else
+			[GPIOMUX_SUSPENDED] = &ebi2_a_d,
+#endif
+		},
+	},
+	{
+		.gpio      = 130,
+		.settings = {
+#if defined(CONFIG_LGE_NFC_PN544_C2)
+			[GPIOMUX_SUSPENDED] = &nfc_pn544pn65n_ven_cfg,
+#else
+			[GPIOMUX_SUSPENDED] = &ebi2_a_d,
+#endif
+		},
+	},
+};
+//                                                              
 
 #if defined(CONFIG_USB_PEHCI_HCD) || defined(CONFIG_USB_PEHCI_HCD_MODULE)
 #endif
@@ -1240,28 +1317,48 @@ static struct msm_gpiomux_config msm8x60_audio_configs[] __initdata = {
 };
 #endif
 
-
-#ifdef CONFIG_LGE_PM_CURRENT_CONSUMPTION_FIX
-static struct gpiomux_setting boot_config_0_cfg = /* BOOT_CONFIG_0 */
-{
-	.func = GPIOMUX_FUNC_GPIO,
-	.drv = GPIOMUX_DRV_2MA,
-	.pull = GPIOMUX_PULL_NONE,
-};
-
-static struct msm_gpiomux_config msm8x60_other_sleep_gpio_configs[] __initdata = {
-	/* BOOT_CONFIG_0*/
+#if defined (CONFIG_MACH_LGE_I_BOARD_SKT)
+static struct msm_gpiomux_config msm8x60_max17040_configs[] __initdata = {
+	/* FUEL_INT*/
 	{
-		.gpio = 81,
+		.gpio = GPIO_FUEL_INT,
 		.settings = {
-			[GPIOMUX_SUSPENDED] = &boot_config_0_cfg,
+			[GPIOMUX_SUSPENDED] = &fuel_int_cfg,
 		}
 	},
 };
 #endif
-
+#if 0
 struct msm_gpiomux_configs
 msm8x60_charm_gpiomux_cfgs[] __initdata = {
+	{msm8x60_gsbi_configs, ARRAY_SIZE(msm8x60_gsbi_configs)},
+	{msm8x60_uart_configs, ARRAY_SIZE(msm8x60_uart_configs)},
+#ifdef CONFIG_MSM_GSBI9_UART
+	{msm8x60_charm_uart_configs, ARRAY_SIZE(msm8x60_charm_uart_configs)},
+#endif
+	{msm8x60_ts_configs, ARRAY_SIZE(msm8x60_ts_configs)},
+	{msm8x60_aux_pcm_configs, ARRAY_SIZE(msm8x60_aux_pcm_configs)},
+	{msm8x60_sdc_configs, ARRAY_SIZE(msm8x60_sdc_configs)},
+	{msm8x60_snd_configs, ARRAY_SIZE(msm8x60_snd_configs)},
+	{msm8x60_mi2s_configs, ARRAY_SIZE(msm8x60_mi2s_configs)},
+	{msm8x60_lcdc_configs, ARRAY_SIZE(msm8x60_lcdc_configs)},
+	{msm8x60_mdp_vsync_configs, ARRAY_SIZE(msm8x60_mdp_vsync_configs)},
+	{msm8x60_hdmi_configs, ARRAY_SIZE(msm8x60_hdmi_configs)},
+	{msm8x60_pmic_configs, ARRAY_SIZE(msm8x60_pmic_configs)},
+	{msm8x60_common_configs, ARRAY_SIZE(msm8x60_common_configs)},
+	{msm8x60_cam_configs, ARRAY_SIZE(msm8x60_cam_configs)},
+	{msm8x60_tmg200_configs, ARRAY_SIZE(msm8x60_tmg200_configs)},
+	{msm8x60_charm_sdc_configs, ARRAY_SIZE(msm8x60_charm_sdc_configs)},
+	{msm8x60_charm_configs, ARRAY_SIZE(msm8x60_charm_configs)},
+	{NULL, 0},
+};
+#endif
+
+struct msm_gpiomux_configs
+msm8x60_ijb_skt_gpiomux_cfgs[] __initdata = {
+#ifdef CONFIG_LGE_PM_CURRENT_CONSUMPTION_FIX
+	{msm8x60_current_configs, ARRAY_SIZE(msm8x60_current_configs)}, //for  rock_bottom
+#endif	
 #ifdef CONFIG_LGE_MHL_SII9244
 	{msm8x60_mhl_configs, ARRAY_SIZE(msm8x60_mhl_configs)},
 #endif
@@ -1279,15 +1376,17 @@ msm8x60_charm_gpiomux_cfgs[] __initdata = {
 	{msm8x60_common_configs, ARRAY_SIZE(msm8x60_common_configs)},
 	{msm8x60_charm_sdc_configs, ARRAY_SIZE(msm8x60_charm_sdc_configs)},
 	{msm8x60_charm_configs, ARRAY_SIZE(msm8x60_charm_configs)},
-	#ifdef CONFIG_LGE_AUDIO
+#ifdef CONFIG_LGE_AUDIO
 	{msm8x60_audio_configs, ARRAY_SIZE(msm8x60_audio_configs)},
+//                                                                
+#if defined (CONFIG_MACH_LGE_I_BOARD_SKT)
+	{msm8x60_max17040_configs, ARRAY_SIZE(msm8x60_max17040_configs)},
 #endif
-#ifdef CONFIG_LGE_PM_CURRENT_CONSUMPTION_FIX
-	{msm8x60_other_sleep_gpio_configs, ARRAY_SIZE(msm8x60_other_sleep_gpio_configs)},
+	{msm8x60_ebi2_configs, ARRAY_SIZE(msm8x60_ebi2_configs)},
+//                                                              
 #endif
 	{NULL, 0},
 };
-
 
 void __init msm8x60_init_gpiomux(struct msm_gpiomux_configs *cfgs)
 {
