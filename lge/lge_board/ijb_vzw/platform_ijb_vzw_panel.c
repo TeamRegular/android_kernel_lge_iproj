@@ -37,8 +37,8 @@
 #include <linux/ion.h>
 #include <mach/ion.h>
 
-#include "devices_ijb_skt.h"
-#include "board_ijb_skt.h"
+#include "devices_ijb_vzw.h"
+#include "board_ijb_vzw.h"
 
 #ifdef CONFIG_FB_MSM_LCDC_DSUB
 /* VGA = 1440 x 900 x 4(bpp) x 2(pages)

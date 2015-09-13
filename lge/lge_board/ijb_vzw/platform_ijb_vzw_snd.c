@@ -1,4 +1,4 @@
-/* lge/lge_board/ijb_skt/board_ijb_skt_snd.c
+/* lge/lge_board/ijb_vzw/board_ijb_vzw_snd.c
  *
  * Copyright (C) 2010 LGE, Inc.
  *
@@ -43,7 +43,7 @@
 
 #include "snddev_icodec.h"
 #include "snddev_ecodec.h"
-#include "timpani_profile_8x60_ijb_skt.h"
+#include "timpani_profile_8x60_ijb_vzw.h"
 #include "snddev_hdmi.h"
 #include "snddev_mi2s.h"
 #include "snddev_virtual.h"
@@ -54,7 +54,7 @@
 
 #ifdef CONFIG_LGE_AUDIO_AMP_WM9093
 #include <linux/i2c.h>
-#include "devices_ijb_skt.h"
+#include "devices_ijb_vzw.h"
 #include "wm9093.h"
 
 //                                           
@@ -1193,7 +1193,7 @@ static struct platform_device msm_iearpiece_device = {
 	.dev = { .platform_data = &snddev_iearpiece_data },
 };
 
-#if 1 // SKT merge form GB clkimhj
+#if 1 // VZW merge form GB clkimhj
 static struct snddev_icodec_data snddev_voip_handset_rx_data = {
 	.capability = (SNDDEV_CAP_RX | SNDDEV_CAP_VOICE),
 	.name = "handset_voip_rx",
@@ -1243,7 +1243,7 @@ static struct platform_device msm_imic_device = {
 	.dev = { .platform_data = &snddev_imic_data },
 };
 
-#if 1 // SKT merge form GB clkimhj
+#if 1 // VZW merge form GB clkimhj
 static struct snddev_icodec_data snddev_voip_handset_tx_data = {
 	.capability = (SNDDEV_CAP_TX | SNDDEV_CAP_VOICE),
 	.name = "handset_voip_tx",
@@ -1323,7 +1323,7 @@ static struct platform_device msm_headset_stereo_device = {
 	.dev = { .platform_data = &snddev_ihs_stereo_rx_data },
 };
 
-#if 1 // SKT merge form GB clkimhj
+#if 1 // VZW merge form GB clkimhj
 static struct snddev_icodec_data snddev_voip_headset_rx_data = {
 	.capability = (SNDDEV_CAP_RX | SNDDEV_CAP_VOICE),
 	.name = "headset_stereo_voip_rx",
@@ -1508,7 +1508,7 @@ static struct platform_device msm_ispkr_stereo_device = {
 };
 
 
-#if 1 // SKT merge form GB clkimhj
+#if 1 // VZW merge form GB clkimhj
 static struct snddev_icodec_data snddev_voip_speaker_rx_data = {
 	.capability = (SNDDEV_CAP_RX | SNDDEV_CAP_VOICE),
 	.name = "speaker_stereo_voip_rx",
@@ -2102,7 +2102,7 @@ static struct platform_device msm_headset_mic_device = {
 	.dev = { .platform_data = &snddev_headset_mic_data },
 };
 
-#if 1 // SKT merge form GB clkimhj
+#if 1 // VZW merge form GB clkimhj
 
 static struct snddev_icodec_data snddev_voip_headset_tx_data = {
 	.capability = (SNDDEV_CAP_TX | SNDDEV_CAP_VOICE),
@@ -2283,7 +2283,7 @@ struct platform_device msm_bt_sco_mic_device = {
 };
 
 
-#if 1 // SKT merge form GB clkimhj
+#if 1 // VZW merge form GB clkimhj
 
 static struct snddev_ecodec_data snddev_voip_bt_sco_rx_data = {
 	.capability = (SNDDEV_CAP_RX | SNDDEV_CAP_VOICE),
@@ -2509,7 +2509,7 @@ static struct platform_device msm_auxpga_lp_hs_device = {
 	.dev = { .platform_data = &snddev_auxpga_lp_hs_data },
 };
 
-#if 1 // SKT merge form GB clkimhj
+#if 1 // VZW merge form GB clkimhj
 //                                                             
 static struct adie_codec_action_unit iearpiece_hac_48KHz_osr256_actions[] =
 	HANDSET_RX_MONO_8000_OSR_256_HAC;
@@ -4915,7 +4915,7 @@ static struct platform_device *snd_devices_lge_i_board[] __initdata = {
 	&lge_hsd_device,
 #endif
 
-#if 1 // SKT merge form GB clkimhj
+#if 1 // VZW merge form GB clkimhj
 	&msm_iearpiece_hac_device,
     &msm_ispkr_stereo_playback_device,
     &msm_headset_stereo_playback_device,

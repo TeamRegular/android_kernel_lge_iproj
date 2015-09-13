@@ -30,8 +30,8 @@
 #include <linux/bootmem.h>
 #include <mach/board.h>
 #include <mach/msm_bus_board.h>
-#include "board_ijb_skt.h"
-#include "devices_ijb_skt.h"
+#include "board_ijb_vzw.h"
+#include "devices_ijb_vzw.h"
 
 #ifdef CONFIG_LGE_DISPLAY_MIPI_LGIT_VIDEO_HD_PT		// js.chang: only LGIT defines
 //                                                                                                           

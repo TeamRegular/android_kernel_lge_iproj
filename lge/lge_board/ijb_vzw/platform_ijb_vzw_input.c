@@ -34,7 +34,7 @@
 #include <asm/uaccess.h>
 #include <board_lge.h>
 
-#include "devices_ijb_skt.h"
+#include "devices_ijb_vzw.h"
 
 #include <apds9900.h>
 
@@ -42,7 +42,7 @@
 #include <linux/bootmem.h>
 #include <mach/board.h>
 #include <mach/msm_bus_board.h>
-#include "board_ijb_skt.h"
+#include "board_ijb_vzw.h"
 
 
 #ifdef CONFIG_LGE_SENSOR

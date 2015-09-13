@@ -13,8 +13,8 @@
 #include <mach/irqs.h>
 #include <asm/mach-types.h>
 #include <mach/gpiomux.h>
-#include "gpiomux_ijb_skt.h"
-#include "devices_ijb_skt.h"
+#include "gpiomux_ijb_vzw.h"
+#include "devices_ijb_vzw.h"
 
 #ifdef CONFIG_LGE_PM_CURRENT_CONSUMPTION_FIX
 static struct gpiomux_setting msm_gpio81_cfg_suspend2 = /* BOOT_CONFIG_0 */
@@ -437,7 +437,7 @@ static struct gpiomux_setting earpole_detect_cfg = {
 
 #endif
 
-#if defined (CONFIG_MACH_LGE_I_BOARD_SKT)
+#if defined (CONFIG_MACH_LGE_I_BOARD_VZW)
 static struct gpiomux_setting fuel_int_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
 	.drv = GPIOMUX_DRV_2MA,
@@ -1317,7 +1317,7 @@ static struct msm_gpiomux_config msm8x60_audio_configs[] __initdata = {
 };
 #endif
 
-#if defined (CONFIG_MACH_LGE_I_BOARD_SKT)
+#if defined (CONFIG_MACH_LGE_I_BOARD_VZW)
 static struct msm_gpiomux_config msm8x60_max17040_configs[] __initdata = {
 	/* FUEL_INT*/
 	{
@@ -1355,7 +1355,7 @@ msm8x60_charm_gpiomux_cfgs[] __initdata = {
 #endif
 
 struct msm_gpiomux_configs
-msm8x60_ijb_skt_gpiomux_cfgs[] __initdata = {
+msm8x60_ijb_vzw_gpiomux_cfgs[] __initdata = {
 #ifdef CONFIG_LGE_PM_CURRENT_CONSUMPTION_FIX
 	{msm8x60_current_configs, ARRAY_SIZE(msm8x60_current_configs)}, //for  rock_bottom
 #endif	
@@ -1379,7 +1379,7 @@ msm8x60_ijb_skt_gpiomux_cfgs[] __initdata = {
 #ifdef CONFIG_LGE_AUDIO
 	{msm8x60_audio_configs, ARRAY_SIZE(msm8x60_audio_configs)},
 //                                                                
-#if defined (CONFIG_MACH_LGE_I_BOARD_SKT)
+#if defined (CONFIG_MACH_LGE_I_BOARD_VZW)
 	{msm8x60_max17040_configs, ARRAY_SIZE(msm8x60_max17040_configs)},
 #endif
 	{msm8x60_ebi2_configs, ARRAY_SIZE(msm8x60_ebi2_configs)},

@@ -80,7 +80,7 @@
 #define MSM_GSBI1_QUP_I2C_BUS_ID  10
 #endif
 
-#if defined (CONFIG_MACH_LGE_I_BOARD_SKT)
+#if defined (CONFIG_MACH_LGE_I_BOARD_VZW)
 #define GPIO_FUEL_INT					128  /*gpio for MAX17040 FUEL_INT */
 #endif
 

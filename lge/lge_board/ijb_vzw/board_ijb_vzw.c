@@ -104,7 +104,7 @@
 #endif
 
 #include "devices.h"
-#include "devices_ijb_skt.h"
+#include "devices_ijb_vzw.h"
 #include <mach/cpuidle.h>
 #include "pm.h"
 #if 0 /*                                                       */
@@ -115,7 +115,7 @@
 #include "spm.h"
 #include "rpm_log.h"
 #include "timer.h"
-#include "gpiomux_ijb_skt.h"
+#include "gpiomux_ijb_vzw.h"
 #include "rpm_stats.h"
 #include "peripheral-loader.h"
 #include <linux/platform_data/qcom_crypto_device.h>
@@ -131,7 +131,7 @@
 #endif
 
 #include "board_lge.h"
-#include "board_ijb_skt.h"
+#include "board_ijb_vzw.h"
 
 #define MSM_SHARED_RAM_PHYS 0x40000000
 
@@ -152,7 +152,7 @@
 #endif /* CONFIG_MMC_MSM_SDC4_SUPPORT */
 #include <linux/random.h> //for test . Get Random MAC address when booting time.
 
-#if 0 /* moved following macros into devices_ijb_skt.h */
+#if 0 /* moved following macros into devices_ijb_vzw.h */
 /* Macros assume PMIC GPIOs start at 0 */
 #define PM8058_GPIO_BASE			NR_MSM_GPIOS
 #define PM8058_GPIO_PM_TO_SYS(pm_gpio)		(pm_gpio + PM8058_GPIO_BASE)
@@ -2075,7 +2075,7 @@ static struct touch_power_module touch_pwr = {
 	.power			= synaptics_t1320_power_on,
 };
 
-static struct touch_platform_data  ijb_skt_ts_data = {
+static struct touch_platform_data  ijb_vzw_ts_data = {
 	.int_pin	= SYNAPTICS_T1320_TS_I2C_INT_GPIO,
 	.reset_pin	= 0,
 	.maker		= "Synaptics",
@@ -2087,7 +2087,7 @@ static struct touch_platform_data  ijb_skt_ts_data = {
 static struct i2c_board_info msm_i2c_synaptics_ts_info[] = {
 	{
 		I2C_BOARD_INFO(LGE_TOUCH_NAME, 0x20),
-		.platform_data = &ijb_skt_ts_data,
+		.platform_data = &ijb_vzw_ts_data,
 		.irq = MSM_GPIO_TO_INT(SYNAPTICS_T1320_TS_I2C_INT_GPIO),
 	}
 };
@@ -4253,7 +4253,7 @@ static int pm8058_gpios_init(void)
 	return 0;
 }
 
-static const unsigned int ijb_skt_keymap[] = {
+static const unsigned int ijb_vzw_keymap[] = {
 	KEY(0, 0, KEY_VOLUMEUP),
 	KEY(0, 1, KEY_VOLUMEDOWN),
 //                                                       
@@ -4265,14 +4265,14 @@ static const unsigned int ijb_skt_keymap[] = {
 //                                                     
 };
 
-static struct matrix_keymap_data ijb_skt_keymap_data = {
-	.keymap_size	= ARRAY_SIZE(ijb_skt_keymap),
-	.keymap		= ijb_skt_keymap,
+static struct matrix_keymap_data ijb_vzw_keymap_data = {
+	.keymap_size	= ARRAY_SIZE(ijb_vzw_keymap),
+	.keymap		= ijb_vzw_keymap,
 };
 
-static struct pm8xxx_keypad_platform_data ijb_skt_keypad_data = {
-	.input_name		= "ijb_skt-keypad",
-	.input_phys_device	= "ijb_skt-keypad/input0",
+static struct pm8xxx_keypad_platform_data ijb_vzw_keypad_data = {
+	.input_name		= "ijb_vzw-keypad",
+	.input_phys_device	= "ijb_vzw-keypad/input0",
 	.num_rows		= 6,
 	.num_cols		= 5,
 	.rows_gpio_start	= PM8058_GPIO_PM_TO_SYS(8),
@@ -4281,7 +4281,7 @@ static struct pm8xxx_keypad_platform_data ijb_skt_keypad_data = {
 	.scan_delay_ms		= 32,
 	.row_hold_ns            = 91500,
 	.wakeup			= 1,
-	.keymap_data		= &ijb_skt_keymap_data,
+	.keymap_data		= &ijb_vzw_keymap_data,
 };
 
 static struct pm8xxx_rtc_platform_data pm8058_rtc_pdata = {
@@ -7232,7 +7232,7 @@ struct msm_board_data {
 };
 
 static struct msm_board_data msm8x60_lge_i_board_data __initdata = {
-	.gpiomux_cfgs = msm8x60_ijb_skt_gpiomux_cfgs,
+	.gpiomux_cfgs = msm8x60_ijb_vzw_gpiomux_cfgs,
 };
 
 //mipi shutdown
@@ -7384,7 +7384,7 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 #endif
 
 #ifdef CONFIG_LGE_PMIC8058_KEYPAD
-	pm8058_platform_data.keypad_pdata = &ijb_skt_keypad_data;
+	pm8058_platform_data.keypad_pdata = &ijb_vzw_keypad_data;
 #endif
 
 	/* configure pmic leds */
@@ -7504,12 +7504,12 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 		msm_fusion_setup_pinctrl();
 }
 
-static void __init msm8x60_ijb_skt_init(void)
+static void __init msm8x60_ijb_vzw_init(void)
 {
 	msm8x60_init(&msm8x60_lge_i_board_data);
 }
 
-static void __init msm8x60_ijb_skt_init_early(void)
+static void __init msm8x60_ijb_vzw_init_early(void)
 {
 	msm8x60_allocate_memory_regions();
 }
@@ -7519,9 +7519,9 @@ MACHINE_START(LGE_I_BOARD, "LGE I BOARD MSM8X60")
 	.reserve = msm8x60_reserve,
 	.init_irq = msm8x60_init_irq,
 	.handle_irq = gic_handle_irq,
-	.init_machine = msm8x60_ijb_skt_init,
+	.init_machine = msm8x60_ijb_vzw_init,
 	.timer = &msm_timer,
-	.init_early = msm8x60_ijb_skt_init_early,
+	.init_early = msm8x60_ijb_vzw_init_early,
 #if 1 /*                                                              */
 	.restart = msm_restart,
 #endif

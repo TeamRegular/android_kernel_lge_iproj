@@ -28,7 +28,7 @@
 #include "clock-rpm.h"
 #include "clock-voter.h"
 #include "devices.h"
-#include "devices_ijb_skt.h"
+#include "devices_ijb_vzw.h"
 #include <linux/dma-mapping.h>
 #include <linux/irq.h>
 #include <linux/clk.h>

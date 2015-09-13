@@ -1,4 +1,4 @@
-/* lge/lge_board/i_atnt/board_ijb_skt.h
+/* lge/lge_board/i_vzw/board_ijb_vzw.h
  *
  * Copyright (C) 2010 LGE, Inc.
  *
@@ -19,8 +19,8 @@
  */
 /*                                                   */
 
-#ifndef __BOARD_IJB_SKT_H__
-#define __BOARD_IJB_SKT_H__
+#ifndef __BOARD_IJB_VZW_H__
+#define __BOARD_IJB_VZW_H__
 #include <mach/msm_memtypes.h>
 
 void __init i2c_register_backlight_info(void);
